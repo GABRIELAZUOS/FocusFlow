@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { CheckCircle2, Timer, Wind, Flame } from 'lucide-react'
+import { useMemo, useState, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { CheckCircle2, Timer, Wind, Flame, Trash2 } from 'lucide-react'
 import { useKanbanStore } from '../store/kanbanStore'
 import { usePomodoroStore } from '../store/pomodoroStore'
 import { useAnxietyStore } from '../store/anxietyStore'
@@ -164,11 +164,63 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
+// ─── localStorage keys to wipe ────────────────────────────────────────────────
+
+const RESET_KEYS = [
+  'focusflow-tasks',
+  'focusflow-agenda',
+  'focusflow-estudos',
+  'focusflow-estudos-agenda',
+  'focusflow-anxiety',
+  'focusflow-pomodoro',
+  'focusflow-woop',
+  'focusflow-coping',
+  'focusflow-mood',
+  'focusflow-mood-alert',
+  'focusflow-gratitude',
+  'focusflow-settings',
+]
+
+// ─── Modal backdrop ───────────────────────────────────────────────────────────
+
+function Backdrop({ onClick }: { onClick: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+      className="fixed inset-0 z-40"
+      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
+      onClick={onClick}
+    />
+  )
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
+
 export default function Stats() {
   const { tasks }           = useKanbanStore()
   const { allSessions }     = usePomodoroStore()
   const { records: anxietyRecords } = useAnxietyStore()
   const { records: moodRecords }    = useMoodStore()
+
+  // ── Reset flow state ────────────────────────────────────────────────────────
+  const [resetStep, setResetStep] = useState<0 | 1 | 2>(0)
+  const [confirmText, setConfirmText] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  function openReset() { setResetStep(1) }
+  function closeReset() { setResetStep(0); setConfirmText('') }
+  function advanceReset() {
+    setResetStep(2)
+    // focus the input after the animation settles
+    setTimeout(() => inputRef.current?.focus(), 150)
+  }
+  function executeReset() {
+    RESET_KEYS.forEach((k) => localStorage.removeItem(k))
+    window.location.reload()
+  }
 
   const s = useMemo(() => {
     const todayKey  = new Date().toDateString()
@@ -487,7 +539,148 @@ export default function Stats() {
           </div>
         </motion.div>
 
+        {/* ── RESET BUTTON ──────────────────────────────────────────────────── */}
+        <motion.div variants={section} className="flex justify-center pb-2">
+          <button
+            onClick={openReset}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150 hover:bg-red-500/10"
+            style={{ color: '#6b3030' }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#6b3030')}
+          >
+            <Trash2 size={13} />
+            Resetar todos os dados
+          </button>
+        </motion.div>
+
       </motion.div>
+
+      {/* ── MODALS ────────────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+
+        {/* Step 1: first confirmation */}
+        {resetStep === 1 && (
+          <>
+            <Backdrop onClick={closeReset} />
+            <motion.div
+              key="reset-step1"
+              initial={{ opacity: 0, scale: 0.95, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -8 }}
+              transition={{ duration: 0.15 }}
+              className="fixed z-50 w-full"
+              style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', maxWidth: 400 }}
+            >
+              <div
+                className="rounded-2xl overflow-hidden shadow-2xl mx-4"
+                style={{ background: '#1a1a24', border: '1px solid #2a2a3e' }}
+              >
+                <div className="px-6 pt-6 pb-4">
+                  <div
+                    className="flex items-center justify-center w-10 h-10 rounded-xl mb-4"
+                    style={{ background: '#ef444418', border: '1px solid #ef444430' }}
+                  >
+                    <Trash2 size={18} style={{ color: '#ef4444' }} />
+                  </div>
+                  <h2 className="text-base font-bold text-white mb-2">Tem certeza?</h2>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    Esta ação vai apagar <span className="text-white font-medium">TODOS</span> os seus dados do FocusFlow permanentemente. Tarefas, agenda, estudos, ansiedade, pomodoros, humor e cartões de enfrentamento.
+                  </p>
+                </div>
+                <div
+                  className="px-6 py-4 flex gap-3 justify-end"
+                  style={{ borderTop: '1px solid #2a2a3e' }}
+                >
+                  <button
+                    onClick={closeReset}
+                    className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={advanceReset}
+                    className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                    style={{ background: '#ef4444', color: 'white' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#dc2626')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '#ef4444')}
+                  >
+                    Continuar
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+
+        {/* Step 2: final confirmation with typed word */}
+        {resetStep === 2 && (
+          <>
+            <Backdrop onClick={closeReset} />
+            <motion.div
+              key="reset-step2"
+              initial={{ opacity: 0, scale: 0.95, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -8 }}
+              transition={{ duration: 0.15 }}
+              className="fixed z-50 w-full"
+              style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', maxWidth: 400 }}
+            >
+              <div
+                className="rounded-2xl overflow-hidden shadow-2xl mx-4"
+                style={{ background: '#1a1a24', border: '1px solid #ef444440' }}
+              >
+                <div className="px-6 pt-6 pb-4">
+                  <h2 className="text-base font-bold text-white mb-2">Última chance.</h2>
+                  <p className="text-sm text-slate-400 leading-relaxed mb-5">
+                    Isso não pode ser desfeito. Todos os seus dados serão perdidos para sempre.
+                  </p>
+                  <label className="block text-xs font-medium text-slate-500 mb-2">
+                    Digite <span className="font-mono text-red-400 font-bold">RESETAR</span> para confirmar
+                  </label>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
+                    placeholder="RESETAR"
+                    spellCheck={false}
+                    className="w-full rounded-xl px-3 py-2.5 text-sm font-mono text-white placeholder-slate-700 outline-none transition-colors"
+                    style={{
+                      background: '#0f0f13',
+                      border: `1px solid ${confirmText === 'RESETAR' ? '#ef444466' : '#2a2a3e'}`,
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && confirmText === 'RESETAR') executeReset()
+                    }}
+                  />
+                </div>
+                <div
+                  className="px-6 py-4 flex gap-3 justify-end"
+                  style={{ borderTop: '1px solid #2a2a3e' }}
+                >
+                  <button
+                    onClick={closeReset}
+                    className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={executeReset}
+                    disabled={confirmText !== 'RESETAR'}
+                    className="px-4 py-2 text-sm font-medium rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                    style={{ background: '#ef4444', color: 'white' }}
+                    onMouseEnter={(e) => { if (confirmText === 'RESETAR') e.currentTarget.style.background = '#dc2626' }}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '#ef4444')}
+                  >
+                    Apagar tudo
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+
+      </AnimatePresence>
     </div>
   )
 }
