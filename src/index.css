@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: #0f0f13;
+    color: #e2e8f0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #1a1a24;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #3d3d56;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #7c3aed;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(26, 26, 36, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .card {
+    @apply bg-[#1a1a24] border border-[#2a2a3e] rounded-2xl;
+  }
+
+  .btn-primary {
+    @apply bg-violet-600 hover:bg-violet-500 text-white font-semibold px-4 py-2 rounded-xl transition-all duration-200 active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply hover:bg-[#2a2a3e] text-slate-400 hover:text-white font-medium px-3 py-2 rounded-xl transition-all duration-200;
+  }
+
+  .input-base {
+    @apply bg-[#0f0f13] border border-[#2a2a3e] rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all duration-200 w-full;
+  }
+
+  .no-drag {
+    -webkit-user-drag: none;
+  }
+}
+
+/* Drag overlay styles */
+.drag-overlay {
+  cursor: grabbing;
+  transform: scale(1.04) rotate(1deg);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  opacity: 0.95;
+}

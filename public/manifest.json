@@ -1,0 +1,23 @@
+{
+  "name": "FocusFlow",
+  "short_name": "FocusFlow",
+  "description": "Produtividade feita para o seu cérebro",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f13",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/logo-1024.svg",
+      "sizes": "1024x1024",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
